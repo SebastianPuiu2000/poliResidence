@@ -1,0 +1,12 @@
+# Use Node for development
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json* ./
+RUN npm install
+
+# Mount local code as volume (set in docker-compose)
+# Start React dev server
+CMD ["npm", "start"]

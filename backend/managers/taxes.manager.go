@@ -11,7 +11,6 @@ import (
 )
 
 func UpdateOneTax(id string, update bson.M) error {
-	log.Println(update)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -44,10 +43,8 @@ func GetTaxesCount() (int64, error) {
 
 	count, err := database.TaxesCollection.CountDocuments(ctx, bson.M{})
 	if err != nil {
-		log.Fatal(err)
 		return 0, err
 	}
 
 	return count, nil
-
 }

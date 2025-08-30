@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: myuser
+      MONGO_INITDB_ROOT_PASSWORD: mypassword
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    container_name: backend
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://myuser:mypassword@mongo:27017/residence?authSource=admin
+    # volumes:
+      # - ./backend:/app  # optional hot reload for Go (requires `air` or similar)
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

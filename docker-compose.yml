@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: myuser
+      MONGO_INITDB_ROOT_PASSWORD: mypassword
+    ports:
+      - "27017:27017"        # expose MongoDB locally
+    volumes:
+      - mongo_data:/data/db  # persist data between restarts
+
+  backend:
+    build: ./backend
+    container_name: backend
+    restart: always
+    ports:
+      - "8080:8080"          # expose backend locally
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://myuser:mypassword@mongo:27017/residence?authSource=admin
+    # volumes:
+    #   - ./backend:/app       # optional: hot-reload your code
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
