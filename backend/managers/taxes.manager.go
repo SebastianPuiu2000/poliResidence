@@ -48,3 +48,18 @@ func GetTaxesCount() (int64, error) {
 
 	return count, nil
 }
+
+func GetTaxes(id string) (bson.M, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var result bson.M
+	filter := bson.M{"id": id}
+
+	err := database.TaxesCollection.FindOne(ctx, filter).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

@@ -5,12 +5,14 @@ import (
 	"log"
 	"net/http"
 	"server/managers"
+	"server/services"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func ImportTaxes(c *gin.Context) {
@@ -40,6 +42,19 @@ func ImportTaxes(c *gin.Context) {
 		return
 	}
 
+	description := strings.ToUpper(rows[2][4])
+	month, year, ok := services.ExtractMonthYear(description)
+	if !ok {
+		c.String(http.StatusBadRequest, "Failed to extract year and month")
+		return
+	}
+
+	validMonthAndYear := services.ValidateMonthYear(month, year)
+	if !validMonthAndYear {
+		c.String(http.StatusBadRequest, "Invalid year or month")
+		return
+	}
+
 	var filteredRows [][]string
 	for i, row := range rows {
 		fmt.Printf("Row %d: %v\n", i+1, row)
@@ -64,15 +79,11 @@ func ImportTaxes(c *gin.Context) {
 		filteredRows = append(filteredRows, cleanedRow)
 	}
 
-	now := time.Now()
-	year := now.Year()
-	month := now.Month()
-
 	for _, row := range filteredRows {
 		id := row[0]
 		update := bson.M{
 			"$set": bson.M{
-				"information." + strconv.Itoa(year) + "." + month.String(): bson.M{
+				"information." + year + "." + month: bson.M{
 					"B": row[1], "C": row[2], "D": row[3], "E": row[4], "F": row[5],
 					"G": row[6], "H": row[7], "I": row[8], "J": row[9], "K": row[10],
 					"L": row[11], "M": row[12], "N": row[13], "O": row[14], "P": row[15],
@@ -89,5 +100,56 @@ func ImportTaxes(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"sheet": "Sheet1",
 		"rows":  filteredRows,
+	})
+}
+
+func GetTaxes(c *gin.Context) {
+	year := c.Query("year")
+	month := c.Query("month")
+	id := c.Query("id")
+
+	result, err := managers.GetTaxes(id)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	info, ok := result["information"].(bson.M)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid information format"})
+		return
+	}
+
+	// If year or month not provided, find latest year and month
+	if year == "" || month == "" {
+		year, month = services.FindLatestYearMonth(info)
+		if year == "" || month == "" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "no valid year/month found"})
+			return
+		}
+	}
+
+	yearObj, ok := info[year].(bson.M)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "year not found"})
+		return
+	}
+
+	data, ok := yearObj[month]
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "month not found"})
+		return
+	}
+
+	prev, next := services.FindPrevNext(info, year, month)
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": data,
+		"prev": prev, // {"year":"2024","month":"sept"} or null
+		"next": next, // {"year":"2024","month":"nov"} or null
 	})
 }

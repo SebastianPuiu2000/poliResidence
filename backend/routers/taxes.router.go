@@ -9,6 +9,7 @@ import (
 func RegisterTaxesRouter(r *gin.Engine) {
 	api := r.Group("/taxes")
 	{
+		api.GET("/", controllers.GetTaxes)
 		api.POST("/upload", controllers.ImportTaxes)
 	}
 }
