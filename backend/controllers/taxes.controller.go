@@ -104,9 +104,12 @@ func ImportTaxes(c *gin.Context) {
 }
 
 func GetTaxes(c *gin.Context) {
+	// Extract the id set by the middleware
+	id := c.GetString("id")
+
+	// Extract query params
 	year := c.Query("year")
 	month := c.Query("month")
-	id := c.Query("id")
 
 	result, err := managers.GetTaxes(id)
 	if err != nil {
