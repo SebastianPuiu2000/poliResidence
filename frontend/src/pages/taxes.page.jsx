@@ -1,6 +1,116 @@
 import { useState, useEffect } from "react";
 import Card from "../components/card.component";
 
+async function mockApi(which, current) {
+  const db = [
+    {
+      year: 2025,
+      month: 8,
+      data: {
+        B: "3",
+        C: "120",
+        D: "85",
+        E: "200",
+        F: "50",
+        G: "10",
+        H: "468",
+        I: "20",
+        J: "30",
+        K: "0",
+        L: "15",
+        M: "12",
+        N: "5",
+        O: "8",
+        P: "10",
+        Q: "40",
+        R: "3",
+        S: "-5",
+        T: "606",
+      },
+    },
+    {
+      year: 2025,
+      month: 9,
+      data: {
+        B: "2",
+        C: "150",
+        D: "95",
+        E: "220",
+        F: "60",
+        G: "12",
+        H: "527",
+        I: "25",
+        J: "35",
+        K: "0",
+        L: "20",
+        M: "14",
+        N: "7",
+        O: "12",
+        P: "10",
+        Q: "55",
+        R: "4",
+        S: "-10",
+        T: "729",
+      },
+    },
+    {
+      year: 2025,
+      month: 10,
+      data: {
+        B: "4",
+        C: "180",
+        D: "100",
+        E: "250",
+        F: "70",
+        G: "15",
+        H: "619",
+        I: "30",
+        J: "40",
+        K: "0",
+        L: "25",
+        M: "16",
+        N: "10",
+        O: "15",
+        P: "12",
+        Q: "65",
+        R: "6",
+        S: "-15",
+        T: "877",
+      },
+    },
+  ];
+  // finding the current month index in db
+  const currentIdx = db.findIndex(
+    (m) => m.year === current.year && m.month === current.month
+  );
+
+  let targetIdx = currentIdx;
+  if (which === "prev") targetIdx = currentIdx - 1;
+  if (which === "next") targetIdx = currentIdx + 1;
+
+  const result = db[targetIdx];
+  return {
+    ...result,
+    hasPrev: targetIdx > 0,
+    hasNext: targetIdx < db.length - 1,
+  };
+}
+
+const monthNames = [
+  "Ianuarie",
+  "Februarie",
+  "Martie",
+  "Aprilie",
+  "Mai",
+  "Iunie",
+  "Iulie",
+  "August",
+  "Septembrie",
+  "Octombrie",
+  "Noiembrie",
+  "Decembrie",
+];
+
 function Menu({ categories, selected, onSelect }) {
   return (
     <div className="flex justify-center">
@@ -25,7 +135,7 @@ function Menu({ categories, selected, onSelect }) {
 }
 
 function Taxes() {
-  const [data, setData] = useState({});
+  const [monthData, setMonthData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(undefined);
@@ -55,62 +165,92 @@ function Taxes() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const backendData = {
-          B: { value: "2", category: undefined },
-          C: { value: "3", category: "Cheltuieli" },
-          D: { value: "4", category: "Cheltuieli" },
-          E: { value: "5", category: "Cheltuieli" },
-          F: { value: "6", category: "Cheltuieli" },
-          G: { value: "7", category: "Ajustări financiare" },
-          H: { value: "8", category: undefined },
-          I: { value: "9", category: "Contribuții auxiliare" },
-          J: { value: "10", category: "Contribuții auxiliare" },
-          K: { value: "11", category: "Contribuții auxiliare" },
-          L: { value: "12", category: "Contribuții auxiliare" },
-          M: { value: "13", category: undefined },
-          N: { value: "14", category: "Restanțe" },
-          O: { value: "15", category: "Restanțe" },
-          P: { value: "16", category: "Restanțe" },
-          Q: { value: "17", category: "Restanțe" },
-          R: { value: "18", category: "Ajustări financiare" },
-          S: { value: "19", category: "Ajustări financiare" },
-          T: { value: "20", category: "Total" },
-        };
-        setData(backendData);
+        const initial = await mockApi("current", { year: 2025, month: 9 });
+        setMonthData(initial);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
+  const handleNav = async (dir) => {
+    if (!monthData) return;
+    try {
+      setLoading(true);
+      const newData = await mockApi(dir, {
+        year: monthData.year,
+        month: monthData.month,
+      });
+      setMonthData(newData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return <p>Se încarcă datele...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
+  if (!monthData) return null;
 
-  // Extragem totalul separat
-  const totalKey = Object.keys(data).find((k) => data[k].category === "Total");
-  const totalValue = totalKey ? data[totalKey].value : null;
+  const totalValue = monthData.data.T;
 
-  // Categorii unice (fără undefined și fără "Total")
   const categories = [
     "Cheltuieli",
     "Contribuții auxiliare",
     "Restanțe",
     "Ajustări financiare",
   ];
+  const categoryMap = {
+    C: "Cheltuieli",
+    D: "Cheltuieli",
+    E: "Cheltuieli",
+    F: "Cheltuieli",
+    I: "Contribuții auxiliare",
+    J: "Contribuții auxiliare",
+    K: "Contribuții auxiliare",
+    L: "Contribuții auxiliare",
+    N: "Restanțe",
+    O: "Restanțe",
+    P: "Restanțe",
+    Q: "Restanțe",
+    G: "Ajustări financiare",
+    R: "Ajustări financiare",
+    S: "Ajustări financiare",
+  };
 
-  // Carduri filtrate: dacă nu e selectată nicio categorie => afișăm tot
-  const filteredKeys = Object.keys(data).filter((k) =>
+  const filteredKeys = Object.keys(monthData.data).filter((k) =>
     selectedCategory
-      ? data[k].category === selectedCategory
-      : data[k].category !== undefined && data[k].category !== "Total"
+      ? categoryMap[k] === selectedCategory
+      : categoryMap[k] !== undefined
   );
 
   return (
     <div className="flex flex-col p-6 gap-14">
+      <div className="flex justify-center items-center gap-4 text-xl font-bold">
+        <button
+          disabled={!monthData.hasPrev}
+          onClick={() => handleNav("prev")}
+          className="px-3 py-1 bg-gray-200 rounded-full disabled:opacity-50 hover:bg-gray-300 transition"
+        >
+          ←
+        </button>
+
+        <h2>
+          {monthNames[monthData.month - 1]} {monthData.year}
+        </h2>
+
+        <button
+          disabled={!monthData.hasNext}
+          onClick={() => handleNav("next")}
+          className="px-3 py-1 bg-gray-200 rounded-full disabled:opacity-50 hover:bg-gray-300 transition"
+        >
+          →
+        </button>
+      </div>
       {/* Buton pentru total general */}
       {totalValue && (
         <div className="flex justify-center">
@@ -146,7 +286,7 @@ function Taxes() {
           <Card
             key={key}
             label={columnMap[key] || key}
-            value={data[key].value}
+            value={monthData.data[key]}
           />
         ))}
       </div>
