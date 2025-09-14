@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
@@ -9,35 +9,45 @@ function LoginForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     const formData = new FormData(e.target);
     const id = formData.get("apartment");
     const password = formData.get("password");
 
-    const user_data = await apiuser.login({ id, password });
+    try {
+      const user_data = await apiuser.login({ id, password });
 
-    if (user_data.success) {
+      if (user_data.success && user_data.token) {
+        localStorage.setItem("token", user_data.token);
+
+        dispatch(setLoggedIn(user_data.userInfo));
+
+        navigate("/taxes");
+      } else {
+        console.error("Login failed:", user_data.message);
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+    } finally {
       setIsLoading(false);
-      dispatch(setLoggedIn(user_data.userInfo));
-      navigate("/home");
-    } else {
-      setIsLoading(false)
     }
+  };
 
-  }
-
-   return (
+  return (
     <div className="overflow-hidden rounded-lg border border-blue-300 bg-white shadow-md">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4 p-6">
           <div className="space-y-2">
-            <label htmlFor="license-plate" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="license-plate"
+              className="block text-sm font-medium text-gray-700"
+            >
               Apartament
             </label>
             <input
@@ -50,7 +60,10 @@ function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
               Parola
             </label>
             <div className="relative">
@@ -104,7 +117,9 @@ function LoginForm() {
                     />
                   </svg>
                 )}
-                <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                <span className="sr-only">
+                  {showPassword ? "Hide password" : "Show password"}
+                </span>
               </button>
             </div>
           </div>
@@ -124,7 +139,14 @@ function LoginForm() {
                   fill="none"
                   viewBox="0 0 24 24"
                 >
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
                   <path
                     className="opacity-75"
                     fill="currentColor"
@@ -140,7 +162,7 @@ function LoginForm() {
         </div>
       </form>
     </div>
-  )
+  );
 }
 
-export default LoginForm
+export default LoginForm;

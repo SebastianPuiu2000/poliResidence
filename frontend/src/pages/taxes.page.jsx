@@ -234,7 +234,7 @@ function Taxes() {
         <button
           disabled={!monthData.hasPrev}
           onClick={() => handleNav("prev")}
-          className="px-3 py-1 bg-gray-200 rounded-full disabled:opacity-50 hover:bg-gray-300 transition"
+          className="px-3 py-1 bg-blue-300 rounded-full disabled:opacity-50 hover:bg-blue-400 hover:scale-110 transition text-4xl"
         >
           ←
         </button>
@@ -246,7 +246,7 @@ function Taxes() {
         <button
           disabled={!monthData.hasNext}
           onClick={() => handleNav("next")}
-          className="px-3 py-1 bg-gray-200 rounded-full disabled:opacity-50 hover:bg-gray-300 transition"
+          className="px-3 py-1 bg-blue-300 rounded-full disabled:opacity-50 hover:bg-blue-400 hover:scale-110 transition text-4xl"
         >
           →
         </button>

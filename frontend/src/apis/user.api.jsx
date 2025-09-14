@@ -1,19 +1,25 @@
-const baseURL = "http://localhost:8000";
+import api from "./api";
+
 const apiuser = {
   login: async ({ id, password }) => {
-    const payload = {  id, password };
-    const res = await fetch(baseURL + "/users/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    //  POST /login
+    const res = await api.post("/users/login", { id, password });
 
-    return res.json();
+    // Extract token and isAdmin from response
+    const { token, isAdmin } = res.data;
+
+    // saving token and isAdmin in localStorage
+    localStorage.setItem("token", token);
+    localStorage.setItem("isAdmin", isAdmin);
+
+    return res.data;
   },
 
-
+  logout: () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAdmin");
+    window.location.href = "/login";
+  },
 };
 
 export default apiuser;
