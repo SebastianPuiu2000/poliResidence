@@ -2,6 +2,7 @@ package routers
 
 import (
 	"server/controllers"
+	"server/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,7 +10,7 @@ import (
 func RegisterTaxesRouter(r *gin.Engine) {
 	api := r.Group("/taxes")
 	{
-		api.GET("/", controllers.GetTaxes)
-		api.POST("/upload", controllers.ImportTaxes)
+		api.GET("/", middlewares.AuthUserMiddleware(), controllers.GetTaxes)
+		api.POST("/upload", middlewares.AuthAdminMiddleware(), controllers.ImportTaxes)
 	}
 }

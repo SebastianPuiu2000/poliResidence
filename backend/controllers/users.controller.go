@@ -3,9 +3,12 @@ package controllers
 import (
 	"log"
 	"net/http"
+	"server/configs"
 	"server/managers"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/xuri/excelize/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
@@ -24,9 +27,15 @@ func checkPassword(hashedPwd, plainPwd string) bool {
 }
 
 func ImportUsers(c *gin.Context) {
+	password := c.PostForm("password")
+	if password != string(configs.JwtSecret) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid data"})
+		return
+	}
+
 	count, err := managers.GetUsersCount()
 	if err != nil {
-		c.String(http.StatusBadRequest, "Database problem")
+		c.String(http.StatusInternalServerError, "Database problem")
 		return
 	}
 	if count > 0 {
@@ -99,17 +108,35 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	var user managers.User
+	// Find user
 	user, err := managers.FindOneUser(input.ID)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
 
+	// Check password
 	if !checkPassword(user.Password, input.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "login successful"})
+	// Generate JWT (expires in 20 minutes)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":      user.ID,
+		"isAdmin": user.ID == "0",
+		"exp":     time.Now().Add(20 * time.Minute).Unix(),
+	})
+
+	tokenString, err := token.SignedString(configs.JwtSecret)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "login successful",
+		"token":   tokenString,
+		"isAdmin": user.ID == "0",
+	})
 }
