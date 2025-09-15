@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Card from "../components/card.component";
+import Layout from "../components/layout.component";
 
 async function mockApi(which, current) {
   const db = [
@@ -229,68 +230,70 @@ function Taxes() {
   );
 
   return (
-    <div className="flex flex-col p-6 gap-14">
-      <div className="flex justify-center items-center gap-4 text-xl font-bold">
-        <button
-          disabled={!monthData.hasPrev}
-          onClick={() => handleNav("prev")}
-          className="px-3 py-1 bg-blue-300 rounded-full disabled:opacity-50 hover:bg-blue-400 hover:scale-110 transition text-4xl"
-        >
-          ←
-        </button>
-
-        <h2>
-          {monthNames[monthData.month - 1]} {monthData.year}
-        </h2>
-
-        <button
-          disabled={!monthData.hasNext}
-          onClick={() => handleNav("next")}
-          className="px-3 py-1 bg-blue-300 rounded-full disabled:opacity-50 hover:bg-blue-400 hover:scale-110 transition text-4xl"
-        >
-          →
-        </button>
-      </div>
-      {/* Buton pentru total general */}
-      {totalValue && (
-        <div className="flex justify-center">
+    <Layout>
+      <div className="flex flex-col p-6 gap-14">
+        <div className="flex justify-center items-center gap-4 text-xl font-bold">
           <button
-            onClick={() => setSelectedCategory(null)}
-            className={`px-6 py-3 rounded-lg font-bold text-lg transition-transform duration-200 text-center
+            disabled={!monthData.hasPrev}
+            onClick={() => handleNav("prev")}
+            className="px-3 py-1 bg-blue-300 rounded-full disabled:opacity-50 hover:bg-blue-400 hover:scale-110 transition text-4xl"
+          >
+            ←
+          </button>
+
+          <h2>
+            {monthNames[monthData.month - 1]} {monthData.year}
+          </h2>
+
+          <button
+            disabled={!monthData.hasNext}
+            onClick={() => handleNav("next")}
+            className="px-3 py-1 bg-blue-300 rounded-full disabled:opacity-50 hover:bg-blue-400 hover:scale-110 transition text-4xl"
+          >
+            →
+          </button>
+        </div>
+        {/* Buton pentru total general */}
+        {totalValue && (
+          <div className="flex justify-center">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-6 py-3 rounded-lg font-bold text-lg transition-transform duration-200 text-center
         ${
           selectedCategory === null
             ? "bg-blue-600 text-white scale-105 shadow-lg"
             : "bg-blue-300 text-blue-900 hover:bg-blue-400"
         }`}
-          >
-            <div className="flex flex-col items-center">
-              <span>TOTAL GENERAL DE PLATĂ</span>
-              <span className="text-4xl font-extrabold mt-1">
-                {totalValue} LEI
-              </span>
-            </div>
-          </button>
+            >
+              <div className="flex flex-col items-center">
+                <span>TOTAL GENERAL DE PLATĂ</span>
+                <span className="text-4xl font-extrabold mt-1">
+                  {totalValue} LEI
+                </span>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* Meniu categorii */}
+        <Menu
+          categories={categories}
+          selected={selectedCategory}
+          onSelect={setSelectedCategory}
+        />
+
+        {/* Carduri filtrate */}
+        <div className="flex flex-wrap justify-center gap-12">
+          {filteredKeys.map((key) => (
+            <Card
+              key={key}
+              label={columnMap[key] || key}
+              value={monthData.data[key]}
+            />
+          ))}
         </div>
-      )}
-
-      {/* Meniu categorii */}
-      <Menu
-        categories={categories}
-        selected={selectedCategory}
-        onSelect={setSelectedCategory}
-      />
-
-      {/* Carduri filtrate */}
-      <div className="flex flex-wrap justify-center gap-12">
-        {filteredKeys.map((key) => (
-          <Card
-            key={key}
-            label={columnMap[key] || key}
-            value={monthData.data[key]}
-          />
-        ))}
       </div>
-    </div>
+    </Layout>
   );
 }
 
