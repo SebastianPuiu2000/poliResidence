@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import buildingIcon from "../assets/building.icon.png";
 
 import apiuser from "../apis/user.api";
 import { setLoggedIn } from "../state/userSlice";
@@ -147,6 +148,18 @@ function LoginForm() {
                     stroke="currentColor"
                     strokeWidth="4"
                   ></circle>
+                  <img
+                    src={buildingIcon}
+                    alt="Building"
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      width: "40px",
+                      height: "40px",
+                    }}
+                  />
                   <path
                     className="opacity-75"
                     fill="currentColor"
