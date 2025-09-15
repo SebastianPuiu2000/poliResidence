@@ -48,9 +48,12 @@ function UploadPage() {
     formData.append("myfile", file); // cheia este myfile conform backend
 
     try {
-      const response = await fetch("http://localhost:5000/upload", {
+      const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
 
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
